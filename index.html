@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA Meta tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="shortcut icon" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    
+    <title>Ercan Market - Şans Çarkı</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- HTML2Canvas JS -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- QR Code JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <!-- Background decorative elements removed -->
+
+    <div class="container" id="app-container">
+        
+        <header class="header">
+            <h1 class="logo">ERCAN <span>MARKET</span></h1>
+            <p class="subtitle">Büyük Ödül Çarkına Hoş Geldiniz</p>
+            <a href="https://www.instagram.com/ercanmarket" target="_blank" style="display:inline-flex; align-items:center; gap:0.5rem; color:var(--primary-color); text-decoration:none; margin-top:1rem; font-weight:700; font-size: 1.1rem; background:rgba(255,85,0,0.1); padding: 10px 24px; border-radius: 30px; border: 1px solid rgba(255,85,0,0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                @ercanmarket
+            </a>
+        </header>
+
+        <!-- Phase 1: Login / Code Entry -->
+        <div id="login-section" class="card fade-in">
+            <h2>Hemen Çevir, Kazan!</h2>
+            <p>Kasadan aldığınız bilet kodunu ve adınızı girerek çarkı çevirebilirsiniz.</p>
+            
+            <form id="code-form" class="form-group">
+                <input type="text" id="user-name" placeholder="Adınız Soyadınız" required>
+                <input type="text" id="spin-code" placeholder="4 Haneli Çark Kodunuz" maxlength="6" required>
+                <div id="error-message" class="error-msg"></div>
+                <button type="submit" class="btn-primary" id="btn-submit">
+                    <span>Doğrula ve Çarkı Gör</span>
+                </button>
+                <button type="button" id="btn-demo" style="background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); margin-top: -0.5rem; width: 100%; padding: 1rem; border-radius: 12px; cursor: pointer; text-transform: uppercase; font-weight: 800;">
+                    <span>Sadece Deneme Çevir (Ödülsüz)</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Phase 2: Wheel Section -->
+        <div id="wheel-section" class="hidden">
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer"></div>
+                <canvas id="wheelCanvas" width="400" height="400"></canvas>
+            </div>
+            
+            <button id="spin-btn" class="btn-spin">Çarkı Çevir</button>
+            <button type="button" onclick="window.location.reload()" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); width: 100%; padding: 0.8rem; border-radius: 12px; cursor: pointer; text-transform: uppercase; font-weight: 600; font-size:0.9rem; margin-top:0.5rem;">
+                İptal Et / Ana Ekrana Dön
+            </button>
+        </div>
+
+        <!-- Phase 3: Result Section -->
+        <div id="result-section" class="card hidden">
+            <h2>Tebrikler! 🎉</h2>
+            <h1 id="prize-text" class="prize-text">Ödül</h1>
+            <p>Lütfen bu ekranı kasiyere göstererek ödülünüzü teslim alınız.</p>
+            <p class="small-text">Ekranı kapattığınızda bu ödül kodu devredışı kalır ve tekrar kullanılamaz.</p>
+            <button type="button" class="btn-primary" onclick="window.location.reload()" style="margin-top: 1.5rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:var(--text-main); font-size:1rem;">Ana Ekrana Dön</button>
+        </div>
+
+        <!-- Legal Disclaimers & Admin Link in document flow -->
+        <div style="margin-top: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+            <div style="color: var(--text-muted); font-size: 0.75rem; opacity: 0.6; text-align: center; line-height: 1.4;">
+                Bu bir çekiliş / piyango değildir. Her katılımcı ödül kazanır. Kampanya tamamen müşteri memnuniyeti ve promosyon amaçlıdır.
+            </div>
+            <a href="admin.html" style="color:var(--text-muted); font-size:0.85rem; text-decoration:none; opacity:0.6; padding:8px 16px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">Yönetici Girişi</a>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/supabase.js"></script>
+    <script src="js/wheel.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Vercel Analytics & Speed Insights -->
+    <script>
+      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+    
+    <!-- Hidden Share Card Template -->
+    <div id="share-card-template" style="position: fixed; top: -2000px; left: -2000px; width: 1080px; height: 1920px; background: #0f172a; font-family: 'Outfit', sans-serif; color: white;">
+        <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px; text-align: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">
+            <!-- Glow effect -->
+            <div style="position: absolute; width: 800px; height: 800px; background: rgba(255, 85, 0, 0.15); filter: blur(150px); border-radius: 50%; z-index: 0;"></div>
+            
+            <div style="z-index: 1;">
+                <h2 style="font-size: 80px; font-weight: 800; letter-spacing: 15px; margin-bottom: 20px; color: white;">ERCAN <span style="color: #ff5500;">MARKET</span></h2>
+                <div style="width: 200px; height: 4px; background: #ff5500; margin: 0 auto 100px;"></div>
+                
+                <p style="font-size: 60px; font-weight: 300; color: #94a3b8; margin-bottom: 20px;">TEBRİKLER!</p>
+                <h1 id="sc-name" style="font-size: 140px; font-weight: 800; margin-bottom: 60px; line-height: 1.1;">-</h1>
+                
+                <div style="padding: 60px 100px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 85, 0, 0.5); border-radius: 60px; display: inline-block; margin-bottom: 100px;">
+                    <p style="font-size: 40px; color: #ff5500; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 15px;">KAZANILAN ÖDÜL</p>
+                    <h3 id="sc-prize" style="font-size: 90px; font-weight: 700; margin: 0;">-</h3>
+                </div>
+
+                <div style="margin-top: 50px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                    <div id="sc-qr" style="background: white; padding: 20px; border-radius: 20px;"></div>
+                    <p style="font-size: 35px; color: #475569;">Sende çevirmek için kodu tara!</p>
+                    <p style="font-size: 30px; color: #475569; margin-top: 10px;">ercanmarket.vercel.app</p>
+                </div>
+            </div>
+            
+            <!-- Decorative elements -->
+            <div style="position: absolute; bottom: 0; right: 0; width: 400px; height: 400px; background: linear-gradient(135deg, transparent 50%, #ff5500 100%); opacity: 0.1;"></div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+      // Service Worker Kaydı (PWA İçin)
+      if('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/sw.js').catch(console.error);
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "ercan-market-wheel",
+  "version": "1.0.0",
+  "description": "Ercan Market PWA Wheel",
+  "main": "index.html",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
