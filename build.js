@@ -17,8 +17,6 @@ const configPath = path.join(__dirname, 'js', 'config.js');
 
 try {
     fs.writeFileSync(configPath, content);
-    console.log('✅ js/config.js başarıyla oluşturuldu.');
 } catch (err) {
-    console.error('❌ Configuration oluşturulurken hata:', err);
     process.exit(1);
 }

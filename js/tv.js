@@ -27,7 +27,6 @@ async function fetchTVWinners() {
             if (error) throw error;
             logs = data || [];
         } catch (e) {
-            console.error("TV verisi çekilemedi", e);
             return;
         }
     }

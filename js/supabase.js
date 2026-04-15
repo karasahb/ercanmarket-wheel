@@ -49,7 +49,6 @@ window.fetchPrizes = async function() {
     }
 
     const { data, error } = await query.order('id', { ascending: true });
-    if (error) console.error("Ödüller çekilemedi", error);
     return data || [];
 }
 

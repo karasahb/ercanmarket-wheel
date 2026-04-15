@@ -113,7 +113,6 @@ async function cleanupExpiredPrizes() {
                 new_probability: null
             }]);
         }
-        console.log(`${expiredPrizes.length} adet süresi dolan ödül otomatik temizlendi.`);
     }
 }
 

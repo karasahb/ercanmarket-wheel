@@ -225,7 +225,6 @@ spinBtn.addEventListener('click', async () => {
                 
                 downloadBtn.innerHTML = "✅ İndirildi!";
             } catch (e) {
-                console.error("Kart oluşturulamadı", e);
                 downloadBtn.innerHTML = "❌ Hata Oluştu";
             } finally {
                 setTimeout(() => {
