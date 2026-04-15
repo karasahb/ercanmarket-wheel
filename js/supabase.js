@@ -100,6 +100,7 @@ window.fetchStats = async function() {
 }
 
 window.validateCode = async function(code) {
+    console.log(window.isMockMode);
     if (window.isMockMode) {
         const found = window.mockData.codes.find(c => c.code === code && !c.is_used);
         return found ? true : false;
@@ -112,6 +113,9 @@ window.validateCode = async function(code) {
         .eq('code', code)
         .eq('is_used', false)
         .limit(1); // Birden fazla varsa ilkini al
+    
+    console.log(data);
+    console.log(error);
         
     return data && data.length > 0; // Data varsa geçerlidir
 }
