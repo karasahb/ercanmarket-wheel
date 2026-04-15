@@ -442,13 +442,24 @@ generateBtn.addEventListener('click', async () => {
     generateBtn.disabled = true;
     generateBtn.innerText = "Üretiliyor...";
     
-    // 4 Haneli Rastgele Rakam
-    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+    // 4 Haneli Rastgele ve Benzersiz Kod
+    let newCode;
+    let attempts = 0;
+    do {
+        newCode = Math.floor(1000 + Math.random() * 9000).toString();
+        attempts++;
+        if (attempts > 100) {
+            alert('Benzersiz kod üretilemedi. Lütfen daha sonra tekrar deneyin.');
+            generateBtn.disabled = false;
+            generateBtn.innerText = "+ Yeni Kod Üret";
+            return;
+        }
+    } while (await isCodeExists(newCode));
     
     if (window.isMockMode) {
         window.mockData.codes.unshift({ code: newCode, is_used: false });
     } else {
-        await window.supabaseClient.from('spin_codes').insert([{ code: newCode }]);
+        await window.supabaseClient.from('spin_codes').insert([{ code: newCode, is_used: false }]);
     }
     
     lastGenDisplay.innerText = newCode;
@@ -471,6 +482,16 @@ generateBtn.addEventListener('click', async () => {
     // Refresh Tables
     fetchActiveCodes();
 });
+
+// Yardımcı fonksiyon: Kodun var olup olmadığını kontrol et
+async function isCodeExists(code) {
+    if (window.isMockMode) {
+        return window.mockData.codes.some(c => c.code === code);
+    } else {
+        const { data } = await window.supabaseClient.from('spin_codes').select('code').eq('code', code).limit(1);
+        return data && data.length > 0;
+    }
+}
 
 // Export CSV Logic
 document.getElementById('export-csv-btn').addEventListener('click', async () => {

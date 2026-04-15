@@ -111,9 +111,9 @@ window.validateCode = async function(code) {
         .select('*')
         .eq('code', code)
         .eq('is_used', false)
-        .single();
+        .limit(1); // Birden fazla varsa ilkini al
         
-    return data != null; // Data varsa geçerlidir
+    return data && data.length > 0; // Data varsa geçerlidir
 }
 
 window.submitSpinResult = async function(code, userName, prizeName, deviceInfo) {
