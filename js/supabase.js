@@ -34,30 +34,30 @@ window.mockData = {
 
 // Yardımcı Servis Fonksiyonları (Supabase veya Mock Çalıştırır)
 
-window.fetchPrizes = async function() {
+window.fetchPrizes = async function () {
     if (window.isMockMode) return window.mockData.prizes;
-    
+
     const now = new Date().toISOString();
     // Gerçek Supabase Çağrısı (Tarih filtrelemeli)
     let query = window.supabaseClient.from('prizes').select('*');
-    
+
     // Eğer index.html veya app.js çağırıyorsa filtrele, admin çağırıyorsa hepsini getir
     if (!window.location.pathname.includes('admin.html')) {
         // Start date null (başlamış) veya geçmişte, End date null (süresiz) veya gelecekte
         query = query.or(`start_date.is.null,start_date.lte.${now}`)
-                     .or(`end_date.is.null,end_date.gte.${now}`);
+            .or(`end_date.is.null,end_date.gte.${now}`);
     }
 
     const { data, error } = await query.order('id', { ascending: true });
     return data || [];
 }
 
-window.fetchStats = async function() {
+window.fetchStats = async function () {
     if (window.isMockMode) return { today: 12, total: 154, loyal: 8, popular: 'Bedava Ekmek', totalCost: 450.50 };
 
     const todayStart = new Date();
-    todayStart.setHours(0,0,0,0);
-    
+    todayStart.setHours(0, 0, 0, 0);
+
     // Fetch prize costs for aggregate calculation
     const { data: prizes } = await window.supabaseClient.from('prizes').select('name, cost');
     const costsMap = {};
@@ -65,17 +65,17 @@ window.fetchStats = async function() {
 
     const { count: totalCount } = await window.supabaseClient.from('spin_logs').select('*', { count: 'exact', head: true });
     const { count: todayCount } = await window.supabaseClient.from('spin_logs').select('*', { count: 'exact', head: true }).gt('created_at', todayStart.toISOString());
-    
+
     // Most popular prize and Total Cost
     const { data: logs } = await window.supabaseClient.from('spin_logs').select('won_prize, customer_name');
     const prizeCounts = {};
     let popularPrize = "-";
     let max = 0;
     let totalCost = 0;
-    
+
     logs?.forEach(l => {
         prizeCounts[l.won_prize] = (prizeCounts[l.won_prize] || 0) + 1;
-        if(prizeCounts[l.won_prize] > max) {
+        if (prizeCounts[l.won_prize] > max) {
             max = prizeCounts[l.won_prize];
             popularPrize = l.won_prize;
         }
@@ -90,17 +90,16 @@ window.fetchStats = async function() {
     });
     const loyalCount = Object.values(customerCounts).filter(c => c > 1).length;
 
-    return { 
-        today: todayCount || 0, 
-        total: totalCount || 0, 
-        loyal: loyalCount, 
+    return {
+        today: todayCount || 0,
+        total: totalCount || 0,
+        loyal: loyalCount,
         popular: popularPrize,
         totalCost: totalCost
     };
 }
 
-window.validateCode = async function(code) {
-    console.log(window.isMockMode);
+window.validateCode = async function (code) {
     if (window.isMockMode) {
         const found = window.mockData.codes.find(c => c.code === code && !c.is_used);
         return found ? true : false;
@@ -113,14 +112,11 @@ window.validateCode = async function(code) {
         .eq('code', code)
         .eq('is_used', false)
         .limit(1); // Birden fazla varsa ilkini al
-    
-    console.log(data);
-    console.log(error);
-        
+
     return data && data.length > 0; // Data varsa geçerlidir
 }
 
-window.submitSpinResult = async function(code, userName, prizeName, deviceInfo) {
+window.submitSpinResult = async function (code, userName, prizeName, deviceInfo) {
     if (window.isMockMode) {
         const codeIndex = window.mockData.codes.findIndex(c => c.code === code);
         if (codeIndex > -1) window.mockData.codes[codeIndex].is_used = true;
@@ -130,15 +126,15 @@ window.submitSpinResult = async function(code, userName, prizeName, deviceInfo) 
 
     // Gerçek İşlem (Kodu kullanıldı yap ve log ekle)
     await window.supabaseClient.from('spin_codes').update({ is_used: true }).eq('code', code);
-    
+
     await window.supabaseClient.from('spin_logs').insert([
-        { 
-            customer_name: userName, 
-            used_code: code, 
+        {
+            customer_name: userName,
+            used_code: code,
             won_prize: prizeName,
             device_info: deviceInfo
         }
     ]);
-    
+
     return true;
 }
