@@ -146,9 +146,9 @@ async function fetchActiveCodes() {
     let codes = [];
     
     if (window.isMockMode) {
-        codes = window.mockData.codes.filter(c => !c.is_used).slice(0, 5);
+        codes = window.mockData.codes.filter(c => !c.is_used);
     } else {
-        const { data } = await window.supabaseClient.from('spin_codes').select('*').eq('is_used', false).order('created_at', { ascending: false }).limit(5);
+        const { data } = await window.supabaseClient.from('spin_codes').select('*').eq('is_used', false).order('created_at', { ascending: false });
         codes = data || [];
     }
 
@@ -439,38 +439,82 @@ addPrizeForm.addEventListener('submit', async (e) => {
 
 // Generate New Code
 generateBtn.addEventListener('click', async () => {
+    const countInput = document.getElementById('generate-count');
+    const count = parseInt(countInput.value) || 1;
+    
     generateBtn.disabled = true;
     generateBtn.innerText = "Üretiliyor...";
     
-    // 4 Haneli Rastgele Rakam
-    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-    
-    if (window.isMockMode) {
-        window.mockData.codes.unshift({ code: newCode, is_used: false });
-    } else {
-        await window.supabaseClient.from('spin_codes').insert([{ code: newCode }]);
+    const newCodes = [];
+    for (let i = 0; i < count; i++) {
+        // 4 Haneli Rastgele Rakam
+        newCodes.push(Math.floor(1000 + Math.random() * 9000).toString());
     }
     
-    lastGenDisplay.innerText = newCode;
+    if (window.isMockMode) {
+        newCodes.forEach(code => {
+            window.mockData.codes.unshift({ code: code, is_used: false });
+        });
+    } else {
+        const insertData = newCodes.map(code => ({ code: code }));
+        await window.supabaseClient.from('spin_codes').insert(insertData);
+    }
     
-    // Generate Code QR
-    const qrContainer = document.getElementById('code-qr-container');
-    qrContainer.innerHTML = '';
-    new QRCode(qrContainer, {
-        text: newCode,
-        width: 100,
-        height: 100,
-        colorDark: "#ff5500",
-        colorLight: "#000000",
-        correctLevel: QRCode.CorrectLevel.M
-    });
+    if (count === 1) {
+        lastGenDisplay.innerText = newCodes[0];
+        // Generate Code QR
+        const qrContainer = document.getElementById('code-qr-container');
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, {
+            text: newCodes[0],
+            width: 100, height: 100, colorDark: "#ff5500", colorLight: "#000000", correctLevel: QRCode.CorrectLevel.M
+        });
+    } else {
+        lastGenDisplay.innerText = `${count} kod üretildi.`;
+        document.getElementById('code-qr-container').innerHTML = ''; // Hide QR for multiple
+    }
 
     generateBtn.disabled = false;
-    generateBtn.innerText = "+ Yeni Kod Üret";
+    generateBtn.innerText = "+ Kod Üret";
     
     // Refresh Tables
     fetchActiveCodes();
 });
+
+// Export Active Codes
+const exportCodesBtn = document.getElementById('export-codes-btn');
+if (exportCodesBtn) {
+    exportCodesBtn.addEventListener('click', async () => {
+        let codes = [];
+        if (window.isMockMode) {
+            codes = window.mockData.codes.filter(c => !c.is_used);
+        } else {
+            const { data } = await window.supabaseClient.from('spin_codes').select('code').eq('is_used', false).order('created_at', { ascending: false });
+            codes = data || [];
+        }
+        
+        if (codes.length === 0) {
+            alert('İndirilecek aktif kod bulunamadı.');
+            return;
+        }
+
+        let txtContent = "Aktif Çark Kodları\n";
+        txtContent += "----------------\n";
+        codes.forEach(c => {
+            txtContent += c.code + "\n";
+        });
+        
+        const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `aktif_kodlar_${new Date().toISOString().split('T')[0]}.txt`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+}
 
 // Export CSV Logic
 document.getElementById('export-csv-btn').addEventListener('click', async () => {
