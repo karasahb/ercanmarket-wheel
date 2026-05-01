@@ -15,6 +15,7 @@ const logsTable = document.getElementById('logs-table').querySelector('tbody');
 const addPrizeForm = document.getElementById('add-prize-form');
 const prizesTable = document.getElementById('prizes-table').querySelector('tbody');
 const prizeLogsTable = document.getElementById('prize-logs-table').querySelector('tbody');
+const feedbacksTable = document.getElementById('feedbacks-table').querySelector('tbody');
 
 // Simple Admin Auth Simulation
 loginForm.addEventListener('submit', (e) => {
@@ -84,6 +85,7 @@ async function loadData() {
     await fetchLogs();
     await fetchAdminPrizes();
     await fetchPrizeEditLogs();
+    await fetchFeedbacks();
     await updateStats();
     generateSiteQR();
 }
@@ -212,6 +214,75 @@ async function fetchLogs() {
             <td style="color:var(--primary-color);">${l.prize}</td>
         `;
         logsTable.appendChild(tr);
+    });
+}
+
+async function fetchFeedbacks() {
+    if (!feedbacksTable) return;
+    feedbacksTable.innerHTML = '';
+    
+    let feedbacks = [];
+    if (window.isMockMode) {
+        feedbacks = [
+            { id: 1, type: 'şikayet', message: 'Personel çok ilgisizdi.', is_read: false, created_at: new Date().toISOString() },
+            { id: 2, type: 'öneri', message: 'Çark sistemini çok sevdim, daha fazla hediye olsa keşke.', is_read: true, created_at: new Date().toISOString() }
+        ];
+    } else {
+        const { data } = await window.supabaseClient.from('feedbacks').select('*').order('created_at', { ascending: false });
+        feedbacks = data || [];
+    }
+
+    if (feedbacks.length === 0) {
+        feedbacksTable.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Henüz mesaj yok.</td></tr>';
+        return;
+    }
+
+    feedbacks.forEach(f => {
+        const tr = document.createElement('tr');
+        const date = new Date(f.created_at).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const typeColor = f.type === 'şikayet' ? 'var(--error)' : '#10b981';
+        const typeLabel = f.type === 'şikayet' ? 'Şikayet' : 'Öneri';
+        const readOpacity = f.is_read ? '0.5' : '1';
+        const readBtnText = f.is_read ? 'Görülmedi İşaretle' : 'Görüldü İşaretle';
+        const readBtnColor = f.is_read ? 'var(--text-muted)' : 'var(--primary-color)';
+
+        tr.style.opacity = readOpacity;
+        tr.style.transition = 'opacity 0.3s';
+
+        tr.innerHTML = `
+            <td style="font-size:0.8rem; color:var(--text-muted);">${date}</td>
+            <td><span style="background:${typeColor}; color:white; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">${typeLabel}</span></td>
+            <td style="max-width:300px; word-wrap:break-word; font-size:0.9rem;">${f.message}</td>
+            <td style="text-align:center;">
+                <button class="toggle-read-btn" data-id="${f.id}" data-read="${f.is_read}" style="background:transparent; color:${readBtnColor}; border:1px solid ${readBtnColor}; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem; margin-right:5px;">${readBtnText}</button>
+                <button class="delete-feedback-btn" data-id="${f.id}" style="background:var(--error); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">Sil</button>
+            </td>
+        `;
+        feedbacksTable.appendChild(tr);
+    });
+
+    document.querySelectorAll('.toggle-read-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            const currentRead = e.target.getAttribute('data-read') === 'true';
+            
+            if (!window.isMockMode) {
+                await window.supabaseClient.from('feedbacks').update({ is_read: !currentRead }).eq('id', id);
+            }
+            fetchFeedbacks();
+        });
+    });
+
+    document.querySelectorAll('.delete-feedback-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            if (confirm("Bu mesajı silmek istediğinizden emin misiniz?")) {
+                const id = e.target.getAttribute('data-id');
+                if (!window.isMockMode) {
+                    await window.supabaseClient.from('feedbacks').delete().eq('id', id);
+                }
+                fetchFeedbacks();
+            }
+        });
     });
 }
 

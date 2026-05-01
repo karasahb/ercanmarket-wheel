@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA Meta tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    
+    <title>Ercan Market - Şikayet ve Öneri</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="container" id="app-container">
+        <header class="header" style="margin-bottom: 2rem;">
+            <h1 class="logo">ERCAN <span>MARKET</span></h1>
+            <p class="subtitle">Müşteri Memnuniyeti</p>
+        </header>
+
+        <div class="card fade-in" id="feedback-form-container">
+            <h2>Görüşlerinizi Önemsiyoruz</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">Hizmet kalitemizi artırmak için her türlü öneri veya şikayetinizi isim belirtmeden anonim olarak bize iletebilirsiniz.</p>
+            
+            <form id="feedback-form" class="form-group">
+                <div style="text-align: left; margin-bottom: 1rem;">
+                    <label for="feedback-type" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Bildirim Türü</label>
+                    <select id="feedback-type" style="width: 100%; padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-family: inherit; font-size: 1rem;" required>
+                        <option value="şikayet">Şikayet</option>
+                        <option value="öneri">Öneri</option>
+                    </select>
+                </div>
+                
+                <div style="text-align: left; margin-bottom: 1rem;">
+                    <label for="feedback-message" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Mesajınız</label>
+                    <textarea id="feedback-message" rows="5" placeholder="Lütfen görüşlerinizi detaylıca yazınız..." style="width: 100%; padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-family: inherit; font-size: 1rem; resize: vertical;" required></textarea>
+                </div>
+
+                <div id="error-message" class="error-msg"></div>
+                
+                <button type="submit" class="btn-primary" id="btn-submit">
+                    Gönder
+                </button>
+            </form>
+        </div>
+
+        <div class="card hidden" id="success-container" style="text-align: center;">
+            <h2>Teşekkür Ederiz! 💚</h2>
+            <p>Bildiriminiz yöneticilerimize başarıyla iletildi.</p>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">Sizlere daha iyi hizmet sunabilmek için bu geri bildirimleri dikkatle inceliyoruz.</p>
+            <button onclick="window.location.href='index.html'" class="btn-primary" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Ana Sayfaya Dön</button>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: center;">
+            <a href="index.html" style="color:var(--text-muted); font-size:0.85rem; text-decoration:none; opacity:0.6;">&larr; Geri Dön</a>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/feedback.js"></script>
+</body>
+</html>
