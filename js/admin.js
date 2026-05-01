@@ -17,30 +17,48 @@ const prizesTable = document.getElementById('prizes-table').querySelector('tbody
 const prizeLogsTable = document.getElementById('prize-logs-table').querySelector('tbody');
 const feedbacksTable = document.getElementById('feedbacks-table').querySelector('tbody');
 
-// Simple Admin Auth Simulation
-loginForm.addEventListener('submit', (e) => {
+// Supabase Auth Integration
+loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const pw = document.getElementById('admin-password').value;
+    const email = document.getElementById('admin-email').value;
+    const password = document.getElementById('admin-password').value;
     
-    // Config üzerinden şifreyi doğrula (Fallback kaldırıldı)
-    const validPassword = (window.CONFIG && window.CONFIG.ADMIN_PASSWORD) ? window.CONFIG.ADMIN_PASSWORD : null;
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Giriş Yapılıyor...';
     
-    if(validPassword && pw === validPassword) {
-        adminLoginSection.classList.add('hidden');
-        adminDashboard.classList.remove('hidden');
-        sessionStorage.setItem('isAdmin', 'true');
-        loadData();
-    } else {
-        errorMsg.innerText = "Hatalı şifre!";
+    try {
+        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) throw error;
+        
+        if (data.session) {
+            adminLoginSection.classList.add('hidden');
+            adminDashboard.classList.remove('hidden');
+            loadData();
+        }
+    } catch (error) {
+        errorMsg.innerText = "Giriş başarısız: " + (error.message.includes('Invalid login') ? 'Hatalı e-posta veya şifre' : error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Giriş Yap';
     }
 });
 
 // Check Session on Load
-document.addEventListener('DOMContentLoaded', () => {
-    if(sessionStorage.getItem('isAdmin') === 'true') {
-        adminLoginSection.classList.add('hidden');
-        adminDashboard.classList.remove('hidden');
-        loadData();
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (session) {
+            adminLoginSection.classList.add('hidden');
+            adminDashboard.classList.remove('hidden');
+            loadData();
+        }
+    } catch (e) {
+        console.warn("Session check failed", e);
     }
 
     // Range slider live update
@@ -73,8 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-logoutBtn.addEventListener('click', () => {
-    sessionStorage.removeItem('isAdmin');
+logoutBtn.addEventListener('click', async () => {
+    await window.supabaseClient.auth.signOut();
     window.location.reload();
 });
 
