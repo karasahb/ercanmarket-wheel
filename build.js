@@ -6,7 +6,8 @@ const path = require('path');
 const config = {
     SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || ''
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL || ''
 };
 
 const content = `// js/config.js - BU DOSYA BUILD SIRASINDA OTOMATİK OLUŞTURULMUŞTUR.

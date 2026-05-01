@@ -45,6 +45,27 @@ if (feedbackForm) {
 
             if (error) throw error;
 
+            // FormSubmit ile E-Posta Bildirimi Gönder
+            if (window.CONFIG && window.CONFIG.ADMIN_EMAIL) {
+                try {
+                    await fetch(`https://formsubmit.co/ajax/${window.CONFIG.ADMIN_EMAIL}`, {
+                        method: "POST",
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            _subject: `Ercan Market - Yeni ${type === 'şikayet' ? 'Şikayet' : 'Öneri'}`,
+                            Kategori: type.toUpperCase(),
+                            Mesaj: message,
+                            Tarih: new Date().toLocaleString('tr-TR')
+                        })
+                    });
+                } catch (emailError) {
+                    console.warn("E-posta bildirimi gönderilemedi:", emailError);
+                }
+            }
+
             // Başarılı
             formContainer.classList.add('hidden');
             successContainer.classList.remove('hidden');
