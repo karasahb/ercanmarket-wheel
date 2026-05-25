@@ -628,7 +628,34 @@ if (exportCodesBtn) {
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+    });
+}
+
+// Clear All Active Codes
+const clearCodesBtn = document.getElementById('clear-codes-btn');
+if (clearCodesBtn) {
+    clearCodesBtn.addEventListener('click', async () => {
+        if (confirm("DİKKAT! Kullanılmayı bekleyen TÜM aktif kodları kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!")) {
+            const originalText = clearCodesBtn.innerText;
+            clearCodesBtn.disabled = true;
+            clearCodesBtn.innerText = "Siliniyor...";
+            
+            try {
+                if (window.isMockMode) {
+                    window.mockData.codes = window.mockData.codes.filter(c => c.is_used);
+                } else {
+                    const { error } = await window.supabaseClient.from('spin_codes').delete().eq('is_used', false);
+                    if (error) throw error;
+                }
+                alert("Tüm aktif kodlar başarıyla silindi.");
+            } catch (err) {
+                alert("Kodlar silinirken bir hata oluştu: " + err.message);
+            } finally {
+                clearCodesBtn.disabled = false;
+                clearCodesBtn.innerText = originalText;
+                fetchActiveCodes();
+            }
+        }
     });
 }
 
