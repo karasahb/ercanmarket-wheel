@@ -540,40 +540,61 @@ generateBtn.addEventListener('click', async () => {
     generateBtn.disabled = true;
     generateBtn.innerText = "Üretiliyor...";
     
-    const newCodes = [];
-    for (let i = 0; i < count; i++) {
-        // 4 Haneli Rastgele Rakam
-        newCodes.push(Math.floor(1000 + Math.random() * 9000).toString());
-    }
-    
-    if (window.isMockMode) {
-        newCodes.forEach(code => {
-            window.mockData.codes.unshift({ code: code, is_used: false });
-        });
-    } else {
-        const insertData = newCodes.map(code => ({ code: code }));
-        await window.supabaseClient.from('spin_codes').insert(insertData);
-    }
-    
-    if (count === 1) {
-        lastGenDisplay.innerText = newCodes[0];
-        // Generate Code QR
-        const qrContainer = document.getElementById('code-qr-container');
-        qrContainer.innerHTML = '';
-        new QRCode(qrContainer, {
-            text: newCodes[0],
-            width: 100, height: 100, colorDark: "#ff5500", colorLight: "#000000", correctLevel: QRCode.CorrectLevel.M
-        });
-    } else {
-        lastGenDisplay.innerText = `${count} kod üretildi.`;
-        document.getElementById('code-qr-container').innerHTML = ''; // Hide QR for multiple
-    }
+    try {
+        // Çakışmaları önlemek için mevcut tüm kodları çek
+        const existingCodes = new Set();
+        if (!window.isMockMode) {
+            const { data } = await window.supabaseClient.from('spin_codes').select('code');
+            if (data) {
+                data.forEach(row => existingCodes.add(row.code));
+            }
+        } else {
+            window.mockData.codes.forEach(c => existingCodes.add(c.code));
+        }
 
-    generateBtn.disabled = false;
-    generateBtn.innerText = "+ Kod Üret";
-    
-    // Refresh Tables
-    fetchActiveCodes();
+        const newCodes = [];
+        const generatedBatch = new Set();
+        
+        // 900,000 olasılık arasından benzersiz 6 haneli kodlar üret
+        while (newCodes.length < count) {
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            if (!existingCodes.has(code) && !generatedBatch.has(code)) {
+                generatedBatch.add(code);
+                newCodes.push(code);
+            }
+        }
+        
+        if (window.isMockMode) {
+            newCodes.forEach(code => {
+                window.mockData.codes.unshift({ code: code, is_used: false });
+            });
+        } else {
+            const insertData = newCodes.map(code => ({ code: code }));
+            const { error } = await window.supabaseClient.from('spin_codes').insert(insertData);
+            if (error) throw error;
+        }
+        
+        if (count === 1) {
+            lastGenDisplay.innerText = newCodes[0];
+            // Generate Code QR
+            const qrContainer = document.getElementById('code-qr-container');
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: newCodes[0],
+                width: 100, height: 100, colorDark: "#ff5500", colorLight: "#000000", correctLevel: QRCode.CorrectLevel.M
+            });
+        } else {
+            lastGenDisplay.innerText = `${count} kod üretildi.`;
+            document.getElementById('code-qr-container').innerHTML = ''; // Hide QR for multiple
+        }
+    } catch (err) {
+        alert("Kod üretimi sırasında hata oluştu: " + err.message);
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.innerText = "+ Kod Üret";
+        // Refresh Tables
+        fetchActiveCodes();
+    }
 });
 
 // Export Active Codes
