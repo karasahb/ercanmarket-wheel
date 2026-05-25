@@ -20,7 +20,13 @@ const feedbacksTable = document.getElementById('feedbacks-table').querySelector(
 // Supabase Auth Integration
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('admin-email').value;
+    
+    const adminEmail = window.CONFIG && window.CONFIG.ADMIN_EMAIL;
+    if (!adminEmail) {
+        errorMsg.innerText = "Giriş başarısız: Sistemde ADMIN_EMAIL tanımlanmamış. Lütfen Vercel panelinden ADMIN_EMAIL değişkenini tanımlayın.";
+        return;
+    }
+    
     const password = document.getElementById('admin-password').value;
     
     const submitBtn = loginForm.querySelector('button[type="submit"]');
@@ -29,7 +35,7 @@ loginForm.addEventListener('submit', async (e) => {
     
     try {
         const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-            email: email,
+            email: adminEmail,
             password: password
         });
 
@@ -41,7 +47,7 @@ loginForm.addEventListener('submit', async (e) => {
             loadData();
         }
     } catch (error) {
-        errorMsg.innerText = "Giriş başarısız: " + (error.message.includes('Invalid login') ? 'Hatalı e-posta veya şifre' : error.message);
+        errorMsg.innerText = "Giriş başarısız: " + (error.message.includes('Invalid login') ? 'Hatalı şifre' : error.message);
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = 'Giriş Yap';

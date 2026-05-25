@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ercan-v23';
+const CACHE_NAME = 'ercan-v24';
 
 self.addEventListener('install', (e) => {
     self.skipWaiting(); // Anında yeni versiyona geç
