@@ -53,10 +53,14 @@ window.fetchPrizes = async function () {
 }
 
 window.fetchStats = async function () {
-    if (window.isMockMode) return { today: 12, total: 154, loyal: 8, popular: 'Bedava Ekmek', totalCost: 450.50 };
+    if (window.isMockMode) return { today: 12, total: 154, loyal: 8, popular: 'Bedava Ekmek', totalCost: 450.50, monthCount: 42, monthCost: 120.00 };
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
 
     // Fetch prize costs for aggregate calculation
     const { data: prizes } = await window.supabaseClient.from('prizes').select('name, cost');
@@ -65,13 +69,15 @@ window.fetchStats = async function () {
 
     const { count: totalCount } = await window.supabaseClient.from('spin_logs').select('*', { count: 'exact', head: true });
     const { count: todayCount } = await window.supabaseClient.from('spin_logs').select('*', { count: 'exact', head: true }).gt('created_at', todayStart.toISOString());
+    const { count: monthCount } = await window.supabaseClient.from('spin_logs').select('*', { count: 'exact', head: true }).gt('created_at', monthStart.toISOString());
 
     // Most popular prize and Total Cost
-    const { data: logs } = await window.supabaseClient.from('spin_logs').select('won_prize, customer_name');
+    const { data: logs } = await window.supabaseClient.from('spin_logs').select('won_prize, customer_name, created_at');
     const prizeCounts = {};
     let popularPrize = "-";
     let max = 0;
     let totalCost = 0;
+    let monthCost = 0;
 
     logs?.forEach(l => {
         prizeCounts[l.won_prize] = (prizeCounts[l.won_prize] || 0) + 1;
@@ -80,7 +86,13 @@ window.fetchStats = async function () {
             popularPrize = l.won_prize;
         }
         // Add to total cost
-        totalCost += costsMap[l.won_prize] || 0;
+        const itemCost = costsMap[l.won_prize] || 0;
+        totalCost += itemCost;
+        
+        // Add to month cost if within current month
+        if (new Date(l.created_at) >= monthStart) {
+            monthCost += itemCost;
+        }
     });
 
     // Loyalty: Count customers with > 1 spin
@@ -95,7 +107,9 @@ window.fetchStats = async function () {
         total: totalCount || 0,
         loyal: loyalCount,
         popular: popularPrize,
-        totalCost: totalCost
+        totalCost: totalCost,
+        monthCount: monthCount || 0,
+        monthCost: monthCost
     };
 }
 

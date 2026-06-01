@@ -67,6 +67,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.warn("Session check failed", e);
     }
 
+    // Tab Navigation Logic
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-tab');
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(tc => tc.classList.remove('active'));
+            btn.classList.add('active');
+            const target = document.getElementById(targetId);
+            if (target) target.classList.add('active');
+        });
+    });
+
     // Range slider live update
     const probSlider = document.getElementById('new-prize-prob');
     const probDisplay = document.getElementById('prob-value-display');
@@ -151,6 +165,12 @@ async function updateStats() {
     
     const costEl = document.getElementById('stats-cost');
     if (costEl) costEl.innerText = `${stats.totalCost.toFixed(2)} TL`;
+    
+    const monthEl = document.getElementById('stats-month');
+    if (monthEl) monthEl.innerText = stats.monthCount || 0;
+    
+    const monthCostEl = document.getElementById('stats-month-cost');
+    if (monthCostEl) monthCostEl.innerText = `${(stats.monthCost || 0).toFixed(2)} TL`;
 }
 
 function generateSiteQR() {
